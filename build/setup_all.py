@@ -20,6 +20,12 @@ for script in scripts:
         print(f"the run with {cmdline} failed - continuing on")
         exit(0)
 
+COMPILED = os.path.join(os.path.dirname(BASE_PATH),"precompiled")
+folders = [
+    
+    
+]    
+
         
     
         

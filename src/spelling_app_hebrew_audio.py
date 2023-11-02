@@ -5,11 +5,6 @@ import tkinter as tk
 from tkinter import scrolledtext, filedialog
 import json,random,re,io,os
 
-if __name__ == "__main__":
-    # Change the working directory to the script's directory
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-
 ############################# Module Specific Stuff ###########################################
 from gtts import gTTS
 from gtts.lang import tts_langs

@@ -3,11 +3,18 @@
 
 import tkinter as tk
 from tkinter import scrolledtext, filedialog
-import json,random,re,io,os
+import json,random,re,io,os,sys
 
-# Change the working directory to the script's directory
-if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+def find_relative_dir():
+    if getattr(sys, "frozen", False):
+        # The application is frozen
+        datadir = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store your data files:
+        datadir = os.path.dirname(__file__)
+    return datadir
+
 first = True
 def speak(text):
     global first
@@ -221,7 +228,7 @@ def filter_files(path,depth=0,max_depth = 2,file_list= []):
     return file_list
 
 
-all_json_files = filter_files("Spelling_Words",file_list=[])
+all_json_files = filter_files(os.path.join(find_relative_dir(),"Spelling_Words"),file_list=[])
 for file in all_json_files:
     with open(file,"r") as fin:
         correct_words += json.loads(fin.read())
@@ -336,7 +343,7 @@ def process_user_input():
     
 
 def load_words():
-    file_path = filedialog.askopenfilename(initialdir="Spelling_Words",filetypes=[("JSON Files", "*.json")])
+    file_path = filedialog.askopenfilename(initialdir=os.path.join(find_relative_dir(),"Spelling_Words"),filetypes=[("JSON Files", "*.json")])
     if file_path:
         with open(file_path, 'r') as file:
             global correct_words
