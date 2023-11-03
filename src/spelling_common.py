@@ -273,6 +273,7 @@ def one_round():
         play_sound()
         
     next_button.config(state="disabled")
+    again_button.config(state="disabled")
     submit_button.config(state = "normal")  
         
 def process_user_input():
@@ -308,9 +309,9 @@ def process_user_input():
                 for x in others:
                     spoken_text +=  f"\t{x}\n"                
         else: 
-            printed_text = f"The spelled word '{spelled_word}' was incorrect. It should have been '{correct}"
+            printed_text = f"The spelled word '{spelled_word}' was incorrect. It should have been '{correct}'. Press 'Try Again' and do it right!"
             if not HEBREW:
-                spoken_text = f"The spelled word '{spelled_word}' that you wrote as '{spelling}' was incorrect. It should have been {correct_spelling}"
+                spoken_text = f"The spelled word '{spelled_word}' that you wrote as '{spelling}' was incorrect. It should have been {correct_spelling}. Press 'Try Again' and do it right!"
             else:
                 spoken_text = f" המילה שכתבתם "
                 spoken_text += f'{spelled_word}' 
@@ -318,7 +319,10 @@ def process_user_input():
                 spoken_text += f'{spelling}' 
                 spoken_text += "אינו כתוב נכון. זה היה אמור להיות " 
                 spoken_text += f"{correct_spelling}"
+                spoken_text += "תנסו שוב!" 
             misses.append(correct)
+            
+        again_button.config(state="normal")
     else:
         score += 1
         if test_mode:
@@ -332,13 +336,13 @@ def process_user_input():
             spoken_text =  f"מעולה " 
             spoken_text += f" {name}! {congrat} "
             spoken_text += "אם לא הבנתם זה אומר שאתם מדהימים!" 
-
+        
+        next_button.config(state="normal")
+        correct_words_index +=1
         
     
     output_text.insert("end", f"{printed_text}'\n")
     play_sound(spoken_text)
-    correct_words_index +=1
-    next_button.config(state="normal")
     submit_button.config(state = "disabled")     
     
 
@@ -425,7 +429,7 @@ app.geometry(f"{app_width}x{app_height}")
 # Create a grid layout for the elements
 
 rows = 5
-columns = 7
+columns = 8
 
 r = 0
 
@@ -450,6 +454,11 @@ c+=1
 
 submit_button = tk.Button(app, text="Submit", command=process_user_input, state="disabled")
 submit_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
+c+=1
+
+
+again_button = tk.Button(app, text="Try Again", command=one_round, state="disabled")  # Start as disabled
+again_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 c+=1
 
 next_button = tk.Button(app, text="Next", command=one_round, state="disabled")  # Start as disabled
