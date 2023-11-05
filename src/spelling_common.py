@@ -60,7 +60,7 @@ CONGRATS_LINES = [
     "Keep it up, and you'll have your own fan club of spellers cheering for you!",
     "Your spelling skills are so 'supercalifragilisticexpialispelling' that even Mary Poppins would be impressed!",
     "You're 'spell-tastically' good at this! I suspect you might have a secret spell-book.",
-    "If you are a spelling superhero... on second thought dont tell that to anyone!",
+    "You are a spelling superhero... saving the world one word at a time",
     "Your spelling is so precise that it puts GPS to shame!",
     "You're a 'spelling maestro' conducting symphonies of perfectly spelled words.",
     "Even the spelling bee itself is buzzing about your skills! You're the queen/king bee!",
@@ -141,7 +141,6 @@ CONGRATS_LINES = [
 COMMON_PHONETIC_SUBSTITUTIONS = {
     "(er)": "r",
     "(th)": "f",
-    # "(v)": "f",
     "(w)": "v",
     "(x)": "ks",
     "(ei)": "a",
@@ -155,7 +154,7 @@ COMMON_PHONETIC_SUBSTITUTIONS = {
     "(ge)": "j",
     "(ough)": "uff",
     "(ch)": "sh",
-    "(igh)": "ite",
+    "(ight)": "ite",
     "(eigh)": "ay",
     "(tion)": "shun",
     "(tion)": "chun",
@@ -192,12 +191,16 @@ def replace_char_at_index(input_string, index, new_char):
         return input_string  # Return the original string if the index is out of bounds
 
 def generate_phonetic_mistake(correct_word, max_substitutions=2):
-    matches = [k for k in COMMON_PHONETIC_SUBSTITUTIONS.keys() if re.search(k, correct_word)]
-    random.shuffle(matches)
-    incorrect_word = correct_word
-    if not matches:
-        print(incorrect_word)
-        input()
+    while True:
+        matches = [k for k in COMMON_PHONETIC_SUBSTITUTIONS.keys() if re.search(k, correct_word)]
+        random.shuffle(matches)
+        incorrect_word = correct_word
+        if not matches:
+            print(incorrect_word)
+            correct_words_index +=1
+            
+        else:
+            break
     for i in range(min([max_substitutions, len(matches)])):
         match = re.search(matches[i], incorrect_word).group(1)
         incorrect_word = re.sub(match, COMMON_PHONETIC_SUBSTITUTIONS[matches[i]], incorrect_word, count=1)
@@ -208,7 +211,9 @@ misses = []
 correct_words = []
 correct_words_index =-1
 incorrect_word =""
-test_mode = True 
+test_mode = True
+spoken_text = ""
+printed_text = ""
        
 def filter_files(path,depth=0,max_depth = 2,file_list= []):
     if depth > max_depth : 
@@ -235,42 +240,58 @@ for file in all_json_files:
 
 correct_words = [ x for x in correct_words if x ]
 
-    
-
 def one_round():
     global correct_words
     global correct_words_index
     global score
     global misses
     global incorrect_word
+    global printed_text
+    global spoken_text
     
     input_text.delete("1.0", "end")
     output_text.delete("1.0", "end")
     if correct_words_index == -1:
         random.shuffle(correct_words)
-        correct_words_index = 0        
+        correct_words_index = 0
+    else:
+        correct_words_index += 1       
     
     if correct_words_index >= len(correct_words):
         missed_words = "\n"+ "\n\t".join(misses)
-        output_text.insert("end",f'the last round ended with a score of:\n{score}/{score+len(misses)}\n')
-        output_text.insert("end",f'please review these words {missed_words}\n')
-        output_text.insert("end",f'to continue playing press submit otherwise type exit or click on the exit button\n')
-            
+        printed_text = f'the last round ended with a score of:\n{score}/{score+len(misses)}\n'
+        printed_text = f'please review these words {missed_words}\n'
+        printed_text = f'to continue playing press submit otherwise type exit or click on the exit button\n'
+        output_text.insert("end",printed_text)            
         score = 0
         misses = []
         correct_words_index = -1
         
     elif test_mode:
         correct = correct_words[correct_words_index]
-        initial_prompt = f"Press Play - listen to the word, and press submit to check, press next to go to the next word\n"
-        output_text.insert("end", initial_prompt)
-        play_sound()
+        printed_text = f"Press Play - listen to the word, and press submit to check, press next to go to the next word\n"
+        output_text.insert("end", printed_text)
+        if HEBREW:
+            spoken_text = " תכתבו את המילה %s"%(correct_words[correct_words_index])
+        else:
+            spoken_text = f"spell the word {correct_words[correct_words_index]}"
+        
+        play_sound(spoken_text)
     else:
         correct = correct_words[correct_words_index]
         incorrect_word = generate_phonetic_mistake(correct, max_substitutions=1)
-        initial_prompt = f"spell the following word correctly: {incorrect_word} then press submit\n"
-        output_text.insert("end", initial_prompt)
-        play_sound()
+        printed_text = f"spell the following word correctly: {incorrect_word} then press submit\n"
+        output_text.insert("end", printed_text)
+        incorrect_spelling = " ".join([f"[[{x}]]" for x in incorrect_word])
+        if HEBREW:
+            spoken_text = " המילה " 
+            spoken_text += correct_words[correct_words_index]
+            spoken_text += " אינו כתוב נכון "
+            spoken_text += incorrect_spelling
+            spoken_text+= " תכתבו את זה נכון "
+        else:
+            spoken_text = f'the following word {correct_words[correct_words_index]} is spelled incorrectly {incorrect_spelling}, spell it correctly below'
+        play_sound(spoken_text)
         
     next_button.config(state="disabled")
     again_button.config(state="disabled")
@@ -282,6 +303,8 @@ def process_user_input():
     global score
     global misses 
     global incorrect_word
+    global printed_text
+    global spoken_text
     
     spelled_word = input_text.get("1.0", "end-1c").strip()  # Get user input from the text box
     name = name_text.get("1.0", "end-1c").strip()
@@ -337,9 +360,7 @@ def process_user_input():
             spoken_text += f" {name}! {congrat} "
             spoken_text += "אם לא הבנתם זה אומר שאתם מדהימים!" 
         
-        next_button.config(state="normal")
-        correct_words_index +=1
-        
+        next_button.config(state="normal")        
     
     output_text.insert("end", f"{printed_text}'\n")
     play_sound(spoken_text)
@@ -369,28 +390,16 @@ def set_test_mode():
     
 def play_sound(text=None):
     if not text:
-        if test_mode:
-            if HEBREW:
-                text = " תכתבו את המילה %s"%(correct_words[correct_words_index])
-            else:
-                text = f"spell the word {correct_words[correct_words_index]}"
-        else:
-            incorrect_spelling = " ".join([f"[[{x}]]" for x in incorrect_word])
-            if HEBREW:
-                text = " המילה " 
-                text += correct_words[correct_words_index]
-                text += " אינו כתוב נכון "
-                text += incorrect_spelling
-                text+= " תכתבו את זה נכון "
-            else:
-                text = f'the following word {correct_words[correct_words_index]} is spelled incorrectly {incorrect_spelling}, spell it correctly below'
+        text = spoken_text
     if isinstance(text,str):
         text = [text]
     for t in text:
         speak(t)
 
 def startup():
-    text = [f"please write your name below so that i can congratulate you"]
+    global spoken_text
+    global printed_text
+    text = [f"please write your name below so that i can get to know you"]
 
     if test_mode:
         text.append(f"i am now in test mode - to go to the phonetics challenge push the toggle test mode button")
@@ -401,9 +410,9 @@ def startup():
     if not HEBREW:
         spoken_text = ". ".join(text)
     else:
-        spoken_text = "אנא כתבו את שמכם למטה שאני אדע למי לשבח! "
+        spoken_text = "אנא כתבו את שמכם למטה שאני אדע מי משחק איתי! "
         if test_mode:
-            spoken_text += "אני כרגע במצב לבדוק מבחן spelling. , כדי לעבור למשחק תלחצו על כפתור  toggle test mode "
+            spoken_text += "אני כרגע במצב לבדוק מבחן הכתבה , כדי לעבור למשחק תלחצו על כפתור  toggle test mode "
         else:
             spoken_text += "אני כרגע במצב המשחק spelling. , כדי לעבור מבחן תלחצו על כפתור  toggle test mode "
         spoken_text += "ניתן לטעון רשימה של מילים! תלחצו על next כדי להמשיך"
