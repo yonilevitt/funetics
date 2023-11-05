@@ -240,7 +240,7 @@ for file in all_json_files:
 
 correct_words = [ x for x in correct_words if x ]
 
-def one_round():
+def one_round(inc = True):
     global correct_words
     global correct_words_index
     global score
@@ -255,13 +255,14 @@ def one_round():
         random.shuffle(correct_words)
         correct_words_index = 0
     else:
-        correct_words_index += 1       
+        if inc:
+            correct_words_index += 1       
     
     if correct_words_index >= len(correct_words):
         missed_words = "\n"+ "\n\t".join(misses)
         printed_text = f'the last round ended with a score of:\n{score}/{score+len(misses)}\n'
-        printed_text = f'please review these words {missed_words}\n'
-        printed_text = f'to continue playing press submit otherwise type exit or click on the exit button\n'
+        printed_text += f'please review these words {missed_words}\n'
+        printed_text += f'to continue playing press submit otherwise type exit or click on the exit button\n'
         output_text.insert("end",printed_text)            
         score = 0
         misses = []
@@ -377,7 +378,7 @@ def load_words():
             correct_words_index = -1
         update_status(f"Loaded {len(correct_words)} words from {file_path}")
         
-        one_round()
+        one_round(inc=False)
 
 def update_status(message):
     status_label.config(text=message) 
@@ -385,7 +386,10 @@ def update_status(message):
 def set_test_mode():
     global test_mode
     test_mode = not test_mode
-    one_round()
+    one_round(inc =False)
+    
+def again():
+    one_round(inc=False)
 
     
 def play_sound(text=None):
@@ -466,7 +470,7 @@ submit_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 c+=1
 
 
-again_button = tk.Button(app, text="Try Again", command=one_round, state="disabled")  # Start as disabled
+again_button = tk.Button(app, text="Try Again", command=again, state="disabled")  # Start as disabled
 again_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 c+=1
 
