@@ -42,7 +42,6 @@ packages = []
 
 if ("common" in script):
     excludes +=["gtts","pygame","email","http","html","pyttsx3"]  
-    #packages += ["spelling_common"]
 elif "offline" in script:
     includes+= ["pyttsx3"]
     excludes+=["gtts","pygame","email","http","html"]
