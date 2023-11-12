@@ -2,8 +2,9 @@
 # See the LICENSE file for details.
 
 import tkinter as tk
-from tkinter import scrolledtext, filedialog
+from tkinter import scrolledtext, filedialog 
 import json,random,re,io,os,sys
+from PIL import Image, ImageTk
 
 def find_relative_dir():
     if getattr(sys, "frozen", False):
@@ -16,6 +17,8 @@ def find_relative_dir():
     return datadir
 
 first = True
+first_load = True
+
 def speak(text):
     global first
     if first:
@@ -182,6 +185,18 @@ COMMON_PHONETIC_SUBSTITUTIONS = {
     "(ed)": "d",
     # Add more substitutions as needed
 }
+
+
+SPELLING_TEST = "Spelling Test"
+FUNETICS_CHALLENGE = "Fun-etics Challenge"
+WORD_JUMBLE =  "Word Jumble"
+SUPPORTED_GAMES = [
+    SPELLING_TEST,
+    FUNETICS_CHALLENGE,
+    WORD_JUMBLE
+]
+
+
 def replace_char_at_index(input_string, index, new_char):
     if 0 <= index < len(input_string):
         string_list = list(input_string)
@@ -206,14 +221,20 @@ def generate_phonetic_mistake(correct_word, max_substitutions=2):
         incorrect_word = re.sub(match, COMMON_PHONETIC_SUBSTITUTIONS[matches[i]], incorrect_word, count=1)
     return incorrect_word
 
+GIF_SOURCES = {
+    "sherlock_gnomes" : 50,
+    "ayala1" : 37
+}
+
 score = 0
 misses = []
 correct_words = []
 correct_words_index =-1
 incorrect_word =""
-test_mode = True
+test_mode = SPELLING_TEST
 spoken_text = ""
 printed_text = ""
+last_is_correct = False
        
 def filter_files(path,depth=0,max_depth = 2,file_list= []):
     if depth > max_depth : 
@@ -248,9 +269,12 @@ def one_round(inc = True):
     global incorrect_word
     global printed_text
     global spoken_text
+    global last_is_correct
+    
     
     input_text.delete("1.0", "end")
     output_text.delete("1.0", "end")
+    last_is_correct = False
     if correct_words_index == -1:
         random.shuffle(correct_words)
         correct_words_index = 0
@@ -262,13 +286,16 @@ def one_round(inc = True):
         missed_words = "\n"+ "\n\t".join(misses)
         printed_text = f'the last round ended with a score of:\n{score}/{score+len(misses)}\n'
         printed_text += f'please review these words {missed_words}\n'
-        printed_text += f'to continue playing press submit otherwise type exit or click on the exit button\n'
-        output_text.insert("end",printed_text)            
-        score = 0
-        misses = []
-        correct_words_index = -1
+        printed_text += f'to continue playing press start otherwise type exit or click on the exit button\n'
+        output_text.insert("end",printed_text) 
         
-    elif test_mode:
+        next_button.config(state="disabled")
+        again_button.config(state="disabled")
+        submit_button.config(state = "disabled")  
+        start_button.config(state = "normal")
+        show_gif(os.path.join(find_relative_dir(),"GIFS","sherlock_gnomes.gif"))    
+        
+    elif test_mode == SPELLING_TEST:
         correct = correct_words[correct_words_index]
         printed_text = f"Press Play - listen to the word, and press submit to check, press next to go to the next word\n"
         output_text.insert("end", printed_text)
@@ -278,7 +305,8 @@ def one_round(inc = True):
             spoken_text = f"spell the word {correct_words[correct_words_index]}"
         
         play_sound(spoken_text)
-    else:
+    
+    elif test_mode == FUNETICS_CHALLENGE:
         correct = correct_words[correct_words_index]
         incorrect_word = generate_phonetic_mistake(correct, max_substitutions=1)
         printed_text = f"spell the following word correctly: {incorrect_word} then press submit\n"
@@ -293,6 +321,22 @@ def one_round(inc = True):
         else:
             spoken_text = f'the following word {correct_words[correct_words_index]} is spelled incorrectly {incorrect_spelling}, spell it correctly below'
         play_sound(spoken_text)
+    elif test_mode == WORD_JUMBLE:
+        correct = correct_words[correct_words_index]
+        incorrect = list(correct)
+        random.shuffle(incorrect)
+        incorrect_word = "".join(incorrect)
+        incorrect_spelling = " ".join([f"[[{x}]]" for x in incorrect_word])
+        printed_text = f"the Letters are all jumbled up! find the correct spelling {incorrect_word}"
+        output_text.insert("end", printed_text)
+        if HEBREW : 
+            spoken_text = " האותיות מבולבלות! תמצאו את הסדר הנכון" 
+            spoken_text += incorrect_spelling
+        else:
+            spoken_text = f"the Letters are all jumbled up! find the correct spelling {incorrect_spelling}"
+    else:
+        raise Exception(f"Unsupported test mode! {test_mode}")
+            
         
     next_button.config(state="disabled")
     again_button.config(state="disabled")
@@ -306,6 +350,9 @@ def process_user_input():
     global incorrect_word
     global printed_text
     global spoken_text
+    global last_is_correct
+    
+    
     
     spelled_word = input_text.get("1.0", "end-1c").strip()  # Get user input from the text box
     name = name_text.get("1.0", "end-1c").strip()
@@ -314,11 +361,14 @@ def process_user_input():
     correct_spelling = " ".join([f"[[{x}]]" for x in correct])
     congrat = CONGRATS_LINES[random.randint(0,len(CONGRATS_LINES)-1)]
     
+    
+    output_text.delete("1.0", "end")
+    
     if spelled_word.lower() != correct.lower():
         others = [x for x in correct_words if x.lower() == spelled_word]
         if others:
             score += 1
-            printed_text =  f"Well done {name}! The word '{correct}' was indeed spelled '{spelled_word}'\n{congrat}\n"
+            printed_text =  f"Well done {name}! The word '{correct}' was indeed spelled '{spelled_word}'\n{congrat}.\nIt could have also been : "
             for x in others:
                 printed_text += f"\t{x}\n"
             if not HEBREW:
@@ -348,6 +398,7 @@ def process_user_input():
             
         again_button.config(state="normal")
     else:
+        last_is_correct = True
         score += 1
         if test_mode:
             printed_text = f"Well done {name}! The word '{correct}' was indeed spelled '{spelled_word}'\n{congrat}"
@@ -365,8 +416,40 @@ def process_user_input():
     
     output_text.insert("end", f"{printed_text}'\n")
     play_sound(spoken_text)
+    if last_is_correct:
+        show_gif(os.path.join(find_relative_dir(),"GIFS","ayala1.gif"))
     submit_button.config(state = "disabled")     
+
+def show_gif(path=None):
+    if not path:
+        gifname = random.choices(list(GIF_SOURCES.keys()))[0]
+        path = os.path.join(find_relative_dir(),"GIFS",f'{gifname}.gif')
+    else:
+        gifname = os.path.basename(path)
+    cnt = GIF_SOURCES[gifname.replace(".gif","")]
     
+    # Function to update the displayed frame
+    def update_frame(idx=0):
+        # Load the GIF image and update the label with the new frame
+        
+        img = Image.open(path.replace(".gif",f".{idx%cnt}.gif"))
+        img = img.resize((200,300), Image.LANCZOS)
+        frame = ImageTk.PhotoImage(img)
+        giflabel.configure(image=frame)
+        giflabel.image = frame
+        
+        # Increase the frame index and schedule the next frame update
+        idx += 1
+        if idx < cnt:
+            app.after(100, update_frame, idx)
+        else:
+            giflabel.configure(image='')
+    # Load the first frame and start the frame update process
+  
+    update_frame(0)
+    
+
+
 
 def load_words():
     file_path = filedialog.askopenfilename(initialdir=os.path.join(find_relative_dir(),"Spelling_Words"),filetypes=[("JSON Files", "*.json")])
@@ -383,10 +466,14 @@ def load_words():
 def update_status(message):
     status_label.config(text=message) 
     
-def set_test_mode():
+def set_test_mode(option):
     global test_mode
-    test_mode = not test_mode
-    one_round(inc =False)
+    test_mode = option
+    selected_option.set(option)
+    game_menu.entryconfig(option, variable=selected_option, onvalue=option)
+
+    reset()
+    
     
 def again():
     one_round(inc=False)
@@ -400,34 +487,97 @@ def play_sound(text=None):
     for t in text:
         speak(t)
 
+def reset():
+    global spoken_text
+    global printed_text
+    global score
+    global misses
+    global correct_words_index
+    global correct_words
+    global last_is_correct
+    global first_load
+    
+    score = 0
+    misses = []
+    correct_words_index = -1
+    last_is_correct = False
+    
+    
+    input_text.delete("1.0", "end")
+    output_text.delete("1.0", "end")
+    
+    text = []
+    
+        
+    text.append(f"i am now in {test_mode} mode")
+    text.append(f"to start press Start")
+   
+    
+          
+    printed_text = ".\n".join(text)
+    spoken_text = printed_text
+    output_text.insert("end", f"{printed_text}")  
+    play_sound(spoken_text)  
+    
+    start_button.config(state="normal")
+    submit_button.config(state = "disable")
+    next_button.config(state = "disable")
+    play_button.config(state = "disable")
+    
+
+
 def startup():
     global spoken_text
     global printed_text
-    text = [f"please write your name below so that i can get to know you"]
-
-    if test_mode:
-        text.append(f"i am now in test mode - to go to the phonetics challenge push the toggle test mode button")
-    else:
-        text.append(f"i am now in the phonetics challenge mode - to go to the test practice push the toggle test mode button")
+    global score
+    global misses
+    global correct_words_index
+    global correct_words
+    global last_is_correct
+    global first_load
     
-    text.append(f"load a word list and press the next button to begin")
-    if not HEBREW:
-        spoken_text = ". ".join(text)
-    else:
-        spoken_text = "אנא כתבו את שמכם למטה שאני אדע מי משחק איתי! "
-        if test_mode:
-            spoken_text += "אני כרגע במצב לבדוק מבחן הכתבה , כדי לעבור למשחק תלחצו על כפתור  toggle test mode "
+    score = 0
+    misses = []
+    correct_words_index = -1
+    last_is_correct = False
+    
+    
+    input_text.delete("1.0", "end")
+    output_text.delete("1.0", "end")
+    
+    text = []
+    if first_load:
+        first_load = False
+        text.append(f"please write your name below so that i can get to know you")
+        text.append(f"i am now in {test_mode} mode - to change the mode use the dropdown menu")    
+        text.append(f"load a word list and press the next button to begin")
+        if not HEBREW:
+            spoken_text = ". ".join(text)
         else:
-            spoken_text += "אני כרגע במצב המשחק spelling. , כדי לעבור מבחן תלחצו על כפתור  toggle test mode "
-        spoken_text += "ניתן לטעון רשימה של מילים! תלחצו על next כדי להמשיך"
+            spoken_text = "אנא כתבו את שמכם למטה שאני אדע מי משחק איתי! "
+            spoken_text += f"אני כרגע במצב {test_mode} "
+            spoken_text += "כדי לעבור למשחק אחר תבחרו מהתפריט"
+            spoken_text += "ניתן לטעון רשימה של מילים! תלחצו על next כדי להמשיך"
+    else:
+        text.append(f"i am now in {test_mode} mode")    
+        text.append(f"Press the next button to begin again")
+        if not HEBREW:
+            spoken_text = ". ".join(text)
+        else:
+            spoken_text = f"אני כרגע במצב {test_mode} "
+            spoken_text += "תלחצו על next כדי להמשיך"
+            spoken_text += "next"
+            
     
+        
     printed_text = ".\n".join(text)
     output_text.insert("end", f"{printed_text}")  
     play_sound(spoken_text)  
+    
     start_button.config(state="disabled")
     next_button.config(state = "normal")
     play_button.config(state = "normal")
-    test_button.config(state = "normal")
+    #test_button.config(state = "normal")
     
 
 
@@ -441,18 +591,34 @@ app_height = app.winfo_screenheight()
 app.geometry(f"{app_width}x{app_height}")
 # Create a grid layout for the elements
 
+
+selected_option = tk.StringVar(app)
+options = SUPPORTED_GAMES
+menu_bar = tk.Menu(app)
+app.config(menu=menu_bar)
+game_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Games", menu=game_menu)
+
+# Add options to the File menu
+for option in options:
+    game_menu.add_checkbutton(label=option, variable=selected_option, onvalue=option, command=lambda opt=option: set_test_mode(opt))
+
 rows = 5
 columns = 8
 
 r = 0
 
 output_text = scrolledtext.ScrolledText(app, width=40, height=20)
-output_text.grid(row=r, column=0, columnspan=columns, padx=10, pady=10, sticky="nsew")
+output_text.grid(row=r, column=0, columnspan=columns-2, padx=10, pady=10, sticky="nsew")
+
+giflabel = tk.Label(app)
+giflabel.grid(row=r, column=columns-1,columnspan=2, padx=10, pady=10, sticky="w")
+
 r+=1
 
 
-label = tk.Label(app, text="Your Input:")
-label.grid(row=r, column=0, padx=10, pady=10, sticky="w")
+input_label = tk.Label(app, text="Your Input:")
+input_label.grid(row=r, column=0, padx=10, pady=10, sticky="w")
 
 input_text = scrolledtext.ScrolledText(app, width=40, height=3)
 input_text.grid(row=r, column=1, columnspan=columns-1, padx=10, pady=10, sticky="nsew")
@@ -482,9 +648,9 @@ play_button = tk.Button(app, text="Play", command=play_sound, state="disabled") 
 play_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 c+=1
 
-test_button = tk.Button(app, text="toggle test mode", command=set_test_mode, state="disabled") 
-test_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
-c+=1
+# test_button = tk.Button(app, text="toggle test mode", command=set_test_mode, state="disabled") 
+# test_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
+# c+=1
 
 load_button = tk.Button(app, text="Load Words", command=load_words)
 load_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
@@ -494,6 +660,7 @@ exit_button = tk.Button(app, text="Exit", command=app.quit)
 exit_button.grid(row=r, column=c, padx=10, pady=10, sticky="nsew")
 c+=1
 r+=1
+
 
 label = tk.Label(app, text="Your Name:")
 label.grid(row=r, column=0, padx=10, pady=10, sticky="w")
@@ -507,18 +674,17 @@ status_label.grid(row=r, column=0, columnspan=columns, padx=10, pady=10, sticky=
 r+=1
 
 
-# Configure grid weights to make the elements expand properly
-# play_sound(f"Press the start button to begin the fun")
-
-
 for r in range(rows):
     app.grid_rowconfigure(r, weight=1)
 for c in range(columns):
     app.grid_columnconfigure(c, weight=1)
     
-if __name__ == "__main__":
-    test_mode = False
-    def new_set_test_mode():
-        print("unsupported with no voice")
-    test_button.config(command=new_set_test_mode)
+if __name__ == "__main__":# List of options for the dropdown menu
+    def remove_option(option_name):
+        # Remove the specified option from the options list
+        if option_name in options:
+            game_menu.entryconfig(option_name, state="disabled")
+
+    remove_option(SPELLING_TEST)
+    test_mode = FUNETICS_CHALLENGE
     app.mainloop()

@@ -69,7 +69,7 @@ setup(
     description="A spelling App to help practice spelling tests and phontic spelling problems",
     options={
         "build_exe": {
-                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words")],
+                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
                 "includes" : includes,
                 "excludes":  excludes,
                 "packages" : packages,

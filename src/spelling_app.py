@@ -32,6 +32,7 @@ def speak(text):
 
     while pygame.mixer.music.get_busy():
         pass  # Continue doing other tasks
+
     # Wait for the audio to finish
     pygame.mixer.music.set_endevent(pygame.USEREVENT)
 

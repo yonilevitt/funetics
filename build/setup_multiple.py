@@ -6,6 +6,8 @@ import os,sys
 from PIL import Image
 import zipfile,shutil
 
+ZIPME= True
+
 # Change the working directory to the script's directory
 BASE_PATH =  os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(BASE_PATH)
@@ -31,7 +33,14 @@ if not os.path.isfile(icon_ico):
     create_ico_from_png(icon_png,icon_ico)
 
 
-excludes =  ["PyQT5","PyQT4","matplotlib","numpy","pytz","pandas","openpxl","cryptography","OpenSSL","tcl","tcl8.6"]
+excludes =  [
+    "PyQt5",
+    "PyQt4",
+    "matplotlib","numpy","pandas","openpxl",
+    "pytz","cryptography","OpenSSL","tcl8","tcl8.6",
+    "jupyter_client","jupyter_core","arrow","polars",
+    "jedi","jinja2"
+    ]
 includes =  ["tkinter","json","os","random","re","io","pyttsx3","gtts","pygame"]           
 packages = [
         'pyttsx3.drivers',
@@ -47,7 +56,7 @@ setup(
     description="A spelling App to help practice spelling tests and phontic spelling problems",
     options={
         "build_exe": {
-                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words")],
+                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
                 "includes" : includes,
                 "excludes":  excludes,
                 "packages" : packages,
@@ -84,27 +93,27 @@ setup(
         ],
 )
 
+if ZIPME:
+    COMPILED = os.path.join(BASE_PATH,"precompiled")
+    output_zip_file = os.path.join(COMPILED,'Funetics.zip')
+    if os.path.exists(output_zip_file):
+        os.remove(output_zip_file)
 
-COMPILED = os.path.join(BASE_PATH,"precompiled")
-output_zip_file = os.path.join(COMPILED,'Funetics.zip')
-if os.path.exists(output_zip_file):
-    os.remove(output_zip_file)
+    directories = [output_path]
+        
+    # Create a new zip file or open an existing one in write mode
+    with zipfile.ZipFile(output_zip_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for directory in directories:
+            # Add the top-level directory itself to the zip file
+            arcname = os.path.basename(directory)
+            zipf.write(directory, arcname=arcname)
 
-directories = [output_path]
-    
- # Create a new zip file or open an existing one in write mode
-with zipfile.ZipFile(output_zip_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
-    for directory in directories:
-        # Add the top-level directory itself to the zip file
-        arcname = os.path.basename(directory)
-        zipf.write(directory, arcname=arcname)
-
-        # Walk through the directory and add its contents to the zip file
-        for foldername, subfolders, filenames in os.walk(directory):
-            for filename in filenames:
-                file_path = os.path.join(directory,foldername, filename)
-                arcname = os.path.relpath(file_path, COMPILED)
-                zipf.write(file_path, arcname=arcname)
-                
-for dir in directories:
-    shutil.rmtree(dir)      
+            # Walk through the directory and add its contents to the zip file
+            for foldername, subfolders, filenames in os.walk(directory):
+                for filename in filenames:
+                    file_path = os.path.join(directory,foldername, filename)
+                    arcname = os.path.relpath(file_path, COMPILED)
+                    zipf.write(file_path, arcname=arcname)
+                    
+    for dir in directories:
+        shutil.rmtree(dir)      

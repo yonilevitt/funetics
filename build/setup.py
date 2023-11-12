@@ -36,7 +36,7 @@ if not os.path.isfile(icon_ico):
     create_ico_from_png(icon_png,icon_ico)
 
 
-excludes =  ["PyQT5","PyQT4","matplotlib","numpy","pytz","pandas","openpxl","cryptography","OpenSSL","tcl","tcl8.6"]
+excludes =  ["PyQt5","PyQt4","matplotlib","numpy","pytz","pandas","openpxl","cryptography","OpenSSL","tcl","tcl8.6"]
 includes =  ["tkinter","json","os","random","re","io"]           
 packages = []
 
@@ -57,10 +57,6 @@ elif "offline" in script:
 else:
     includes+=["gtts","pygame"]
     excludes+= ["pyttsx3"]
-    # if "hebrew" in script:         
-    #     packages += ["spelling_app_hebrew_audio"]
-    # else:
-    #     packages += ["spelling_app"]
     
 setup(
     name="Funetics",
@@ -68,7 +64,7 @@ setup(
     description="A spelling App to help practice spelling tests and phontic spelling problems",
     options={
         "build_exe": {
-                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words")],
+                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
                 "includes" : includes,
                 "excludes":  excludes,
                 "packages" : packages,
