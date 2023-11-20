@@ -39,9 +39,10 @@ excludes =  [
     "matplotlib","numpy","pandas","openpxl",
     "pytz","cryptography","OpenSSL","tcl8","tcl8.6",
     "jupyter_client","jupyter_core","arrow","polars",
-    "jedi","jinja2"
+    "jedi","jinja2","matplotlib_inline","ipkernel","IPython",
+    "dill","colorama","debugpy"
     ]
-includes =  ["tkinter","json","os","random","re","io","pyttsx3","gtts","pygame"]           
+includes =  ["tkinter","json","os","random","re","io","pyttsx3","gtts","pygame","threading"]           
 packages = [
         'pyttsx3.drivers',
         'pyttsx3.drivers.dummy',

@@ -261,6 +261,7 @@ for file in all_json_files:
 
 correct_words = [ x for x in correct_words if x ]
 
+
 def one_round(inc = True):
     global correct_words
     global correct_words_index
@@ -283,7 +284,7 @@ def one_round(inc = True):
             correct_words_index += 1       
     
     if correct_words_index >= len(correct_words):
-        missed_words = "\n"+ "\n\t".join(misses)
+        missed_words = "\n"+ "\n\t".join(list(set(misses)))
         printed_text = f'the last round ended with a score of:\n{score}/{score+len(misses)}\n'
         printed_text += f'please review these words {missed_words}\n'
         printed_text += f'to continue playing press start otherwise type exit or click on the exit button\n'
@@ -356,11 +357,12 @@ def process_user_input():
     
     spelled_word = input_text.get("1.0", "end-1c").strip()  # Get user input from the text box
     name = name_text.get("1.0", "end-1c").strip()
+    if not name:
+        name = "Whoever you are"
     correct = correct_words[correct_words_index]
     spelling = " ".join([f"[[{x}]]" for x in spelled_word])
     correct_spelling = " ".join([f"[[{x}]]" for x in correct])
     congrat = CONGRATS_LINES[random.randint(0,len(CONGRATS_LINES)-1)]
-    
     
     output_text.delete("1.0", "end")
     
@@ -400,10 +402,11 @@ def process_user_input():
     else:
         last_is_correct = True
         score += 1
-        if test_mode:
+        if  test_mode == SPELLING_TEST:
             printed_text = f"Well done {name}! The word '{correct}' was indeed spelled '{spelled_word}'\n{congrat}"
-        else:
+        elif test_mode in [FUNETICS_CHALLENGE,WORD_JUMBLE]:
             printed_text = f"Well done {name}! The word '{incorrect_word}' was indeed '{spelled_word}'\n{congrat}"
+                 
                
         if not HEBREW:
             spoken_text =  f"Well done {name}! {congrat}" 
@@ -452,7 +455,7 @@ def show_gif(path=None):
 
 
 def load_words():
-    file_path = filedialog.askopenfilename(initialdir=os.path.join(find_relative_dir(),"Spelling_Words"),filetypes=[("JSON Files", "*.json")])
+    file_path = filedialog.askopenfilename(initialdir=os.path.join(find_relative_dir(),"Spelling_Words"),filetypes=[("All Files", "*")])
     if file_path:
         with open(file_path, 'r') as file:
             global correct_words

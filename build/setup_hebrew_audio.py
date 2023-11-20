@@ -38,7 +38,7 @@ if not os.path.isfile(icon_ico):
 
 
 excludes =  ["PyQT5","PyQT4","matplotlib","numpy","pytz","pandas","openpxl","cryptography","OpenSSL","tcl","tcl8.6"]
-includes =  ["tkinter","json","os","random","re","io"]           
+includes =  ["tkinter","json","os","random","re","io","threading"]           
 packages = []
 
 if ("common" in script):
