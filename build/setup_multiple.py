@@ -6,7 +6,7 @@ import os,sys
 from PIL import Image
 import zipfile,shutil
 
-ZIPME= True
+ZIPME= False
 
 # Change the working directory to the script's directory
 BASE_PATH =  os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,7 +18,7 @@ baseline_script = os.path.join(BASE_PATH,"src","spelling_app.py")
 hebrew_audio_script = os.path.join(BASE_PATH,"src","spelling_app_hebrew_audio.py")
 offline_script = os.path.join(BASE_PATH,"src","spelling_app_offline.py")
 nonverbal_script = os.path.join(BASE_PATH,"src","spelling_common.py")
-output_path =  os.path.join(BASE_PATH,"precompiled","Funetics")
+output_path =  os.path.expanduser("~/Downloads/Funetics") #os.path.join(BASE_PATH,"precompiled","Funetics")
 
 os.makedirs(output_path,exist_ok=True)
 
@@ -54,10 +54,10 @@ packages = [
 setup(
     name="Funetics",
     version="1.0",
-    description="A spelling App to help practice spelling tests and phontic spelling problems",
+    description="A spelling App to help practice spelling tests and phonetic spelling problems",
     options={
         "build_exe": {
-                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
+               # "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
                 "includes" : includes,
                 "excludes":  excludes,
                 "packages" : packages,
@@ -94,8 +94,14 @@ setup(
         ],
 )
 
+for (i,o) in [(os.path.join(BASE_PATH,"src","Spelling_Words"),"Spelling_Words"),(os.path.join(BASE_PATH,"src","GIFS"),"GIFS")]:
+    if os.path.isdir(os.path.join(output_path,o)):
+        shutil.rmtree(os.path.join(output_path,o))
+    shutil.copytree(i,os.path.join(output_path,o))
+    
 if ZIPME:
     COMPILED = os.path.join(BASE_PATH,"precompiled")
+    
     output_zip_file = os.path.join(COMPILED,'Funetics.zip')
     if os.path.exists(output_zip_file):
         os.remove(output_zip_file)
