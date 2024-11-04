@@ -3,7 +3,7 @@
 
 import tkinter as tk
 from tkinter import scrolledtext, filedialog 
-import json,random,re,io,os,sys
+import random,re,io,os,sys
 from PIL import Image, ImageTk
 
 def find_relative_dir():
@@ -196,6 +196,20 @@ SUPPORTED_GAMES = [
     WORD_JUMBLE
 ]
 
+GIF_SOURCES = {
+    "sherlock_gnomes" : 50,
+    "ayala1" : 37
+}
+
+score = 0
+misses = []
+correct_words = []
+correct_words_index =-1
+incorrect_word =""
+test_mode = SPELLING_TEST
+spoken_text = ""
+printed_text = ""
+last_is_correct = False
 
 def replace_char_at_index(input_string, index, new_char):
     if 0 <= index < len(input_string):
@@ -206,6 +220,7 @@ def replace_char_at_index(input_string, index, new_char):
         return input_string  # Return the original string if the index is out of bounds
 
 def generate_phonetic_mistake(correct_word, max_substitutions=2):
+    global correct_words_index
     while True:
         matches = [k for k in COMMON_PHONETIC_SUBSTITUTIONS.keys() if re.search(k, correct_word)]
         random.shuffle(matches)
@@ -221,20 +236,6 @@ def generate_phonetic_mistake(correct_word, max_substitutions=2):
         incorrect_word = re.sub(match, COMMON_PHONETIC_SUBSTITUTIONS[matches[i]], incorrect_word, count=1)
     return incorrect_word
 
-GIF_SOURCES = {
-    "sherlock_gnomes" : 50,
-    "ayala1" : 37
-}
-
-score = 0
-misses = []
-correct_words = []
-correct_words_index =-1
-incorrect_word =""
-test_mode = SPELLING_TEST
-spoken_text = ""
-printed_text = ""
-last_is_correct = False
        
 def filter_files(path,depth=0,max_depth = 2,file_list= []):
     if depth > max_depth : 
@@ -244,7 +245,7 @@ def filter_files(path,depth=0,max_depth = 2,file_list= []):
     dirs =  [d for d in os.listdir(path) if os.path.isdir(os.path.join(path,d))]
 
     for name in files:
-        match = ".json" in name
+        match = ".txt" in name
         if match : 
             file_list.append(os.path.join(path, name))
         else:
@@ -254,10 +255,10 @@ def filter_files(path,depth=0,max_depth = 2,file_list= []):
     return file_list
 
 
-all_json_files = filter_files(os.path.join(find_relative_dir(),"Spelling_Words"),file_list=[])
-for file in all_json_files:
+all_text_files = filter_files(os.path.join(find_relative_dir(),"Spelling_Words"),file_list=[])
+for file in all_text_files:
     with open(file,"r") as fin:
-        correct_words += json.loads(fin.read())
+        correct_words += [x.strip() for x in fin.read().split("\n") if x.strip()]
 
 correct_words = [ x for x in correct_words if x ]
 
@@ -460,7 +461,7 @@ def load_words():
         with open(file_path, 'r') as file:
             global correct_words
             global correct_words_index
-            correct_words = json.load(file)
+            correct_words = [x.strip() for x in file.read().split("\n") if x.strip()]
             correct_words_index = -1
         update_status(f"Loaded {len(correct_words)} words from {file_path}")
         

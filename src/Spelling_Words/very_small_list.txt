@@ -1,5 +1,5 @@
-[
-    "bridge",
-    "gravity",
-    "hungry"
-]
+bridge
+gravity
+hungry
+does not
+I'm

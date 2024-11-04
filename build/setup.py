@@ -56,14 +56,14 @@ elif "offline" in script:
 else:
     includes+=["gtts","pygame"]
     excludes+= ["pyttsx3"]
-    
+
 setup(
     name="Funetics",
     version="1.0",
-    description="A spelling App to help practice spelling tests and phontic spelling problems",
+    description="A spelling App to help practice spelling tests and phonetic spelling problems",
     options={
         "build_exe": {
-                "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
+               # "include_files" : [(os.path.join("src","Spelling_Words"),"Spelling_Words"),(os.path.join("src","GIFS"),"GIFS")],
                 "includes" : includes,
                 "excludes":  excludes,
                 "packages" : packages,
